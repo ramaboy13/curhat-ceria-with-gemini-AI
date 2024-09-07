@@ -33,20 +33,22 @@ const chat = genAI
       },
     ],
     generationConfig: {
-      maxOutputTokens: 100000,
+      maxOutputTokens: 1000,
     },
   });
 
 // Function to check for inappropriate content
 const isContentInappropriate = (content) => {
-  const inappropriateWords = ["ngentot", "porno", "seksual", "kriminalitas"]; // Tambahkan kata-kata tidak pantas di sini
+  const inappropriateWords = ["ngentot", "porno", "seksual", "kriminalitas"];
   return inappropriateWords.some((word) =>
     content.toLowerCase().includes(word)
   );
 };
 
 // Submit handler untuk mengirim pesan
-const submitForm = async () => {
+const submitForm = async (event) => {
+  event.preventDefault();
+
   if (isContentInappropriate(promptInput.value)) {
     chatHistory.value.push({
       role: "user",
@@ -59,6 +61,7 @@ const submitForm = async () => {
     });
 
     promptInput.value = "";
+    resetTextareaHeight(); // Reset tinggi textarea setelah pesan terkirim
     return;
   }
 
@@ -89,6 +92,7 @@ const submitForm = async () => {
 
     // Reset textarea setelah pesan terkirim
     promptInput.value = "";
+    resetTextareaHeight(); // Reset tinggi textarea setelah pesan terkirim
   } catch (e) {
     chatHistory.value.push({
       role: "error",
@@ -96,11 +100,26 @@ const submitForm = async () => {
     });
   }
 };
+
+// Fungsi untuk menyesuaikan tinggi textarea
+const adjustTextareaHeight = (event) => {
+  const textarea = event.target;
+  textarea.style.height = "auto"; // Reset height
+  textarea.style.height = `${textarea.scrollHeight}px`; // Set height sesuai scrollHeight
+};
+
+// Fungsi untuk mereset tinggi textarea ke semula setelah pesan dikirim
+const resetTextareaHeight = () => {
+  const textarea = document.querySelector("textarea");
+  if (textarea) {
+    textarea.style.height = "40px"; // Mengembalikan tinggi textarea ke semula
+  }
+};
 </script>
 
 <template>
   <div class="chat-container">
-    <h1>Curhat ceria bersama <span class="fancy">GEMINI</span></h1>
+    <h4>Curhat ceria dengan <span class="fancy">GEMINI</span></h4>
     <p class="made">Made with love by Barito Surya</p>
 
     <!-- Render chat history -->
@@ -131,54 +150,49 @@ const submitForm = async () => {
     </div>
 
     <!-- Form berada di bawah chat history -->
-    <form @submit.prevent="submitForm">
+    <form @submit="submitForm">
       <div class="prompt-box">
         <img class="avatar" src="../public/img/user.png" alt="User Avatar" />
         <textarea
           v-model="promptInput"
           name="prompt"
           placeholder="Type message"
-          type="text"
+          rows="1"
+          @input="adjustTextareaHeight"
         ></textarea>
-        <button type="submit">Send</button>
+        <button type="submit">
+          <img src="../public/img/send.png" alt="Send Icon" />
+        </button>
       </div>
     </form>
+    <p class="version">Versi Beta 1.0</p>
   </div>
 </template>
 
 <style>
-h1 {
-  margin-left: 23px;
-  font-size: 1.1vw;
+h4 {
   text-transform: uppercase;
   text-align: center;
   line-height: 1;
-  font-family: "Work Sans", sans-serif;
   font-weight: 900;
+  text-shadow: 3px 2px 2px #171717;
 }
 .made {
   text-align: center;
-  color: lightblue;
+  color: #9e9e9e;
+}
+.fancy {
+  color: aquamarine;
 }
 
-.fancy {
-  @supports (background-clip: text) or (-webkit-background-clip: text) {
-    background-image: url("data:image/svg+xml,%3Csvg width='2250' height='900' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cg%3E%3Cpath fill='%2300A080' d='M0 0h2255v899H0z'/%3E%3Ccircle cx='366' cy='207' r='366' fill='%2300FDCF'/%3E%3Ccircle cx='1777.5' cy='318.5' r='477.5' fill='%2300FDCF'/%3E%3Ccircle cx='1215' cy='737' r='366' fill='%23008060'/%3E%3C/g%3E%3C/svg%3E%0A");
-    background-size: 110% auto;
-    background-position: center;
-    color: transparent;
-    -webkit-background-clip: text;
-    background-clip: text;
-  }
-}
 .chat-container {
   background-color: #2d2d2d;
   color: #fff;
   padding: 20px;
   border-radius: 10px;
-  width: 500px;
+  width: 600px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin: auto;
-  font-family: "Arial", sans-serif;
 }
 
 /* Chat history */
@@ -197,7 +211,7 @@ h1 {
 
 .message-box.user {
   justify-content: flex-end;
-  align-self: flex-end; /* Tambahkan ini */
+  align-self: flex-end;
 }
 
 .message-box.model {
@@ -224,12 +238,11 @@ h1 {
   position: relative;
 }
 
-/* User message bubble */
 .user .message-content {
   background-color: #1976d2;
   color: white;
   text-align: left;
-  margin-left: auto; /* Tambahkan ini agar message content menempel di kanan */
+  margin-left: auto;
 }
 
 .user .message-content:after {
@@ -264,7 +277,7 @@ h1 {
   align-items: center;
   padding: 10px;
   background-color: #333;
-  border-radius: 5px;
+  border-radius: 10px;
 }
 
 .prompt-box textarea {
@@ -278,19 +291,26 @@ h1 {
   height: 40px;
   background-color: #444;
   color: white;
+  overflow-y: hidden;
 }
 
 .prompt-box button {
-  background-color: #1976d2;
+  background-color: #4040403d;
+  margin-left: 2px;
   color: white;
   border: none;
-  padding: 10px;
+  padding: 5px;
   border-radius: 5px;
   cursor: pointer;
 }
-
 .prompt-box button:hover {
   background-color: #155a9d;
+}
+.version {
+  color: #9e9e9e;
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: center;
 }
 
 /* Media Queries for Responsive Design */
@@ -334,17 +354,20 @@ h1 {
   }
 
   .message-content {
-    max-width: 85%;
+    max-width: 100%;
     font-size: 12px;
   }
-
+  .prompt-box .avatar {
+    width: 37px;
+    height: auto;
+  }
   .prompt-box textarea {
     font-size: 12px;
-    height: 30px;
+    height: 40px;
   }
 
   .prompt-box button {
-    padding: 7px;
+    padding: 5px;
   }
 }
 </style>
